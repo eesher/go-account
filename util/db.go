@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
 	"database/sql"
@@ -14,6 +14,31 @@ func CheckErr(err error) bool {
 		return false
 	}
 	return true
+}
+
+func ScanSingleRowToMap(rows *sql.Rows) (map[string]interface{}, error) {
+	cols, _ := rows.Columns()
+	// Create a slice of interface{}'s to represent each column,
+	// and a second slice to contain pointers to each item in the columns slice.
+	columns := make([]interface{}, len(cols))
+	columnPointers := make([]interface{}, len(cols))
+	for i, _ := range columns {
+		columnPointers[i] = &columns[i]
+	}
+
+	// Scan the result into the column pointers...
+	if err := rows.Scan(columnPointers...); err != nil {
+		return nil, err
+	}
+
+	// Create our map, and retrieve the value for each column from the pointers slice,
+	// storing it in the map with the name of the column as the key.
+	m := make(map[string]interface{})
+	for i, colName := range cols {
+		val := columnPointers[i].(*interface{})
+		m[colName] = *val
+	}
+	return m, nil
 }
 
 func MysqlInit() {
@@ -64,19 +89,23 @@ func NewUser(info map[string]string) int {
 	return 0
 }
 
-func GetUserInfo(uid string, user_info *UserInfo) int {
+func GetUserInfo(uid string) (map[string]interface{}, int) {
 	rows, err := db.Query("select * from users where uid=?", uid)
 	if !CheckErr(err) {
-		return 30001
+		return nil, 30001
 	}
 
 	defer rows.Close()
 
-	if rows.Next() && !CheckErr(rows.Scan(&user_info.Uid, &user_info.PortraitUrl, &user_info.Name, &user_info.Gender, &user_info.Email, &user_info.Phone, &user_info.AdminLevel, &user_info.CreateTime)) {
-		return 30001
+	//var user_info = make(map[string]interface{})
+	//if rows.Next() && !CheckErr(rows.Scan(&user_info["uid"], &user_info["portrait_url"], &user_info["name"], &user_info["gender"], &user_info["email"], &user_info["phone"], &user_info["admin_level"], &user_info["create_time"])) {
+	rows.Next()
+	user_info, err := ScanSingleRowToMap(rows)
+	if !CheckErr(err) {
+		return nil, 30001
 	}
 
-	return 0
+	return user_info, 0
 }
 
 /*

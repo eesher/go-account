@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"go-account/util"
 	"reflect"
 	"strconv"
 	"strings"
@@ -79,10 +80,10 @@ func (login_info *LoginInfo) MakeUser(msg map[string]string) int {
 
 	//var json_data []byte
 	errcode := 0
-	if errcode = NewUserMap(msg); errcode != 0 {
+	if errcode = util.NewUserMap(msg); errcode != 0 {
 		return errcode
 	}
-	if errcode = NewUser(msg); errcode != 0 {
+	if errcode = util.NewUser(msg); errcode != 0 {
 		return errcode
 	}
 
@@ -92,7 +93,7 @@ func (login_info *LoginInfo) MakeUser(msg map[string]string) int {
 
 func (login_info *LoginInfo) GuestLogin(msg map[string]string) int {
 	var errcode int
-	login_info.Uid, errcode = GetUid("guest", msg["device_id"])
+	login_info.Uid, errcode = util.GetUid("guest", msg["device_id"])
 	if errcode != 0 {
 		return errcode
 	}
@@ -120,20 +121,30 @@ func Login(msg map[string]string, json_data *[]byte) {
 	}
 
 	login_info.DeviceID = msg["device_id"]
-	login_info.AccessToken = base64.URLEncoding.EncodeToString(GenerateToken(login_info.Uid))
+	login_info.AccessToken = base64.URLEncoding.EncodeToString(util.GenerateToken(login_info.Uid))
 	*json_data, _ = json.Marshal(LoginRet{GetResult(0), login_info})
 }
 
 func Auth(msg map[string]string, json_data *[]byte) {
-	if !AuthToken(msg["uid"], msg["access_token"]) {
+	if !util.AuthToken(msg["uid"], msg["access_token"]) {
 		*json_data, _ = json.Marshal(GetResult(33003))
 		return
 	}
 	user_info := UserInfo{}
-	if errcode := GetUserInfo(msg["uid"], &user_info); errcode != 0 {
+	var db_info map[string]interface{}
+	var errcode int
+	if db_info, errcode = util.GetUserInfo(msg["uid"]); errcode != 0 {
 		*json_data, _ = json.Marshal(GetResult(errcode))
 		return
 	}
+	user_info.Uid = string(db_info["uid"].([]byte))
+	user_info.PortraitUrl = string(db_info["portrait_url"].([]byte))
+	user_info.Name = string(db_info["name"].([]byte))
+	user_info.Gender = int(db_info["gender"].(int64))
+	user_info.Email = string(db_info["email"].([]byte))
+	user_info.Phone = string(db_info["phone"].([]byte))
+	user_info.AdminLevel = int(db_info["admin_level"].(int64))
+	user_info.CreateTime = string(db_info["create_time"].([]byte))
 
 	*json_data, _ = json.Marshal(AuthRet{GetResult(0), user_info})
 }

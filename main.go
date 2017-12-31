@@ -1,19 +1,20 @@
 package main
 
 import (
-    "log"
-    "net/http"
+	"go-account/util"
+	"log"
+	"net/http"
 )
 
 func main() {
 
-	MysqlInit()
-	TokenInit("wewillfuckyou", 3600)
+	util.MysqlInit()
+	util.TokenInit("wewillfuckyou", 3600)
 	ErrcodeInit()
 	RoutesInit()
 
-    http.HandleFunc("/login", Handler(Login))
-    http.HandleFunc("/auth", Handler(Auth))
+	http.HandleFunc("/login", Handler(Login))
+	http.HandleFunc("/auth", Handler(Auth))
 
-    log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
+	log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
 }
