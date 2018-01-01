@@ -10,33 +10,10 @@ import (
 	"time"
 )
 
-var ERRCODE map[int]string
-
-func ErrcodeInit() {
-	ERRCODE = make(map[int]string)
-	ERRCODE[0] = "ok"
-	ERRCODE[30001] = "db error"
-	ERRCODE[31001] = "invalid params"
-	ERRCODE[31002] = "invalid platform"
-	ERRCODE[31003] = "invalid passwd"
-	ERRCODE[31004] = "invalid device_id"
-	ERRCODE[32001] = "login error"
-	ERRCODE[32002] = "registered user"
-	ERRCODE[33001] = "signin error"
-	ERRCODE[33002] = "can not found user"
-	ERRCODE[33003] = "passwd not match"
-	ERRCODE[33004] = "invalid token"
-}
-
 var dur_time int64 = time.Date(2016, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()
 
-type Result struct {
-	Errcode int    `json:"errcode"`
-	Msg     string `json:"msg"`
-}
-
 type LoginRet struct {
-	Result
+	util.Result
 	LoginInfo
 }
 
@@ -46,6 +23,7 @@ type LoginInfo struct {
 	ThirdOpenid      string `json:"third_openid"`
 	ThirdAccessToken string `json:"third_access_token"`
 	AccessToken      string `json:"access_token"`
+	ExpireTime       int64  `json:"expire_time"`
 	DeviceID         string `json:"device_id"`
 	//	AdminLevel  int    `json:"admin_level"`
 }
@@ -62,12 +40,8 @@ type UserInfo struct {
 }
 
 type AuthRet struct {
-	Result
+	util.Result
 	UserInfo
-}
-
-func GetResult(errcode int) Result {
-	return Result{errcode, ERRCODE[errcode]}
 }
 
 func (login_info *LoginInfo) MakeUser(msg map[string]string) int {
@@ -80,10 +54,10 @@ func (login_info *LoginInfo) MakeUser(msg map[string]string) int {
 
 	//var json_data []byte
 	errcode := 0
-	if errcode = util.NewUserMap(msg); errcode != 0 {
+	if errcode = util.NewUserMap(msg); errcode != util.ERRCODE.OK {
 		return errcode
 	}
-	if errcode = util.NewUser(msg); errcode != 0 {
+	if errcode = util.NewUser(msg); errcode != util.ERRCODE.OK {
 		return errcode
 	}
 
@@ -94,16 +68,13 @@ func (login_info *LoginInfo) MakeUser(msg map[string]string) int {
 func (login_info *LoginInfo) GuestLogin(msg map[string]string) int {
 	var errcode int
 	login_info.Uid, errcode = util.GetUid("guest", msg["device_id"])
-	if errcode != 0 {
+	if errcode != util.ERRCODE.OK {
 		return errcode
 	}
 	if len(login_info.Uid) == 0 {
-		if errcode = login_info.MakeUser(msg); errcode != 0 {
-			return errcode
-		}
+		errcode = login_info.MakeUser(msg)
 	}
-	login_info.ThirdOpenid = msg["device_id"]
-	return 0
+	return errcode
 }
 
 func Login(msg map[string]string, json_data *[]byte) {
@@ -111,30 +82,32 @@ func Login(msg map[string]string, json_data *[]byte) {
 	login_info := LoginInfo{}
 	method := reflect.ValueOf(&login_info).MethodByName(strings.Title(msg["platform"]) + "Login")
 	if !method.IsValid() {
-		*json_data, _ = json.Marshal(GetResult(31002))
+		*json_data, _ = json.Marshal(util.GetResult(util.ERRCODE.INVA_PLATFORM))
 		return
 	}
 	ret := method.Call([]reflect.Value{reflect.ValueOf(msg)})
-	if errcode := ret[0].Int(); errcode != 0 {
-		*json_data, _ = json.Marshal(GetResult(int(errcode)))
+	if errcode := int(ret[0].Int()); errcode != util.ERRCODE.OK {
+		*json_data, _ = json.Marshal(util.GetResult(errcode))
 		return
 	}
 
 	login_info.DeviceID = msg["device_id"]
+	login_info.ThirdOpenid = msg["device_id"]
+	login_info.ExpireTime = util.TOKEN_DATA.ExpireTime
 	login_info.AccessToken = base64.URLEncoding.EncodeToString(util.GenerateToken(login_info.Uid))
-	*json_data, _ = json.Marshal(LoginRet{GetResult(0), login_info})
+	*json_data, _ = json.Marshal(LoginRet{util.GetResult(util.ERRCODE.OK), login_info})
 }
 
 func Auth(msg map[string]string, json_data *[]byte) {
 	if !util.AuthToken(msg["uid"], msg["access_token"]) {
-		*json_data, _ = json.Marshal(GetResult(33003))
+		*json_data, _ = json.Marshal(util.GetResult(util.ERRCODE.INVA_TOKEN))
 		return
 	}
 	user_info := UserInfo{}
 	var db_info map[string]interface{}
 	var errcode int
-	if db_info, errcode = util.GetUserInfo(msg["uid"]); errcode != 0 {
-		*json_data, _ = json.Marshal(GetResult(errcode))
+	if db_info, errcode = util.GetUserInfo(msg["uid"]); errcode != util.ERRCODE.OK {
+		*json_data, _ = json.Marshal(util.GetResult(errcode))
 		return
 	}
 	user_info.Uid = string(db_info["uid"].([]byte))
@@ -146,5 +119,5 @@ func Auth(msg map[string]string, json_data *[]byte) {
 	user_info.AdminLevel = int(db_info["admin_level"].(int64))
 	user_info.CreateTime = string(db_info["create_time"].([]byte))
 
-	*json_data, _ = json.Marshal(AuthRet{GetResult(0), user_info})
+	*json_data, _ = json.Marshal(AuthRet{util.GetResult(util.ERRCODE.OK), user_info})
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"go-account/util"
 	"io"
 	"net/http"
 	//"reflect"
@@ -30,12 +31,10 @@ func NewData(name string) (interface{}, bool) {
 	}
 	return reflect.New(elem).Elem().Interface(), true
 }
-*/
 
 func RoutesInit() {
 	//type_registry["/login"] = Login
 	//RegisterType("/login", (*Login)(nil))
-	/*
 		param_check["/auth"] = map[string]bool{
 			"platform":     true,
 			"channel":      true,
@@ -43,13 +42,13 @@ func RoutesInit() {
 			"device_id":    true,
 			"access_token": true,
 		}
-	*/
 }
 
 var (
 	user_re   = "[^a-zA-Z0-9._@-]+|([aA][dD][mM][iI][nN])|([rR][oO][bB][oO][tT])|([gG][uU][eE][sS][tT])"
 	passwd_re = "[^a-z0-9]+"
 )
+*/
 
 type handler func(w http.ResponseWriter, r *http.Request)
 type Method func(msg map[string]string, json_data *[]byte)
@@ -74,7 +73,7 @@ func Handler(pass Method) handler {
 			*/
 			err := json.NewDecoder(r.Body).Decode(&data)
 			if err != nil {
-				json_data, _ = json.Marshal(GetResult(31001))
+				json_data, _ = json.Marshal(util.GetResult(util.ERRCODE.INVA_PARAM))
 				io.WriteString(w, string(json_data))
 				return
 			} /* else {

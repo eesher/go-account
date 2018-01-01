@@ -11,23 +11,24 @@ import (
 )
 
 type Token struct {
-	salt        string
-	expire_time int64
+	Salt       string
+	ExpireTime int64
 }
 
-var token_data Token
+var TOKEN_DATA = Token{}
 
-func TokenInit(salt string, expire_time int64) {
-	token_data = Token{salt: salt, expire_time: expire_time}
+func TokenInit(config TokenConfig) {
+	TOKEN_DATA.Salt = config.Salt
+	TOKEN_DATA.ExpireTime = config.Expire
 }
 
 func GenerateToken(data string) []byte {
 	var buff bytes.Buffer
 	buff.WriteString(data)
-	buff.WriteString(token_data.salt)
+	buff.WriteString(TOKEN_DATA.Salt)
 
 	now := time.Now()
-	epoch := now.Unix() / token_data.expire_time
+	epoch := now.Unix() / TOKEN_DATA.ExpireTime
 	tmp := strconv.FormatInt(epoch, 10)
 	buff.WriteString(tmp)
 
