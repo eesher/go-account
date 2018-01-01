@@ -88,8 +88,6 @@ func GetUserInfo(uid string) (map[string]interface{}, int) {
 
 	defer rows.Close()
 
-	//var user_info = make(map[string]interface{})
-	//if rows.Next() && !CheckErr(rows.Scan(&user_info["uid"], &user_info["portrait_url"], &user_info["name"], &user_info["gender"], &user_info["email"], &user_info["phone"], &user_info["admin_level"], &user_info["create_time"])) {
 	rows.Next()
 	user_info, err := ScanSingleRowToMap(rows)
 	if !CheckErr(err) {
@@ -98,56 +96,3 @@ func GetUserInfo(uid string) (map[string]interface{}, int) {
 
 	return user_info, ERRCODE.OK
 }
-
-/*
-func CheckUser(platform string, user string, device_id string) string {
-	rows, err := db.Query("select uid from users where platform=? and (device_id=? or user=?)", platform, device_id, user)
-	if !CheckErr(err) {
-		return "-1"
-	}
-
-	defer rows.Close()
-	var uid string
-	rows.Next()
-	rows.Scan(&uid)
-
-	return uid
-}
-
-func UpdateDevice(uid string, device_id string) {
-	db.Query("update users set device_id = ? where uid = ?", device_id, uid)
-}
-
-func NewUser(uid string, platform string, channel string, user string, passwd string, device_id string) int {
-	has_user := CheckUser(platform, user, device_id)
-
-	if len(has_user) != 0 {
-		return 32002
-	}
-
-	stmt, err := db.Prepare("INSERT users SET uid=?,platform=?,channel=?,user=?,passwd=?,device_id=?,date=now()")
-	if !CheckErr(err) {
-		return 32001
-	}
-
-	_, err = stmt.Exec(uid, platform, channel, user, passwd, device_id)
-	if !CheckErr(err) {
-		return 32001
-	}
-
-	return 0
-}
-
-func NewGuest(uid string, device_id string) bool {
-	stmt, err := db.Prepare("INSERT users SET uid=?,platform='mu77',channel='guest',device_id=?,create_time=now()")
-	if !CheckErr(err) {
-		return false
-	}
-
-	_, err = stmt.Exec(uid, device_id)
-	if !CheckErr(err) {
-		return false
-	}
-	return true
-}
-*/

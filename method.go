@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"go-account/util"
 	"reflect"
@@ -10,7 +9,7 @@ import (
 	"time"
 )
 
-var dur_time int64 = time.Date(2016, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()
+var dur_time int64 = time.Date(2016, time.January, 0, 0, 0, 0, 0, time.UTC).UnixNano()
 
 type LoginRet struct {
 	util.Result
@@ -45,8 +44,8 @@ type AuthRet struct {
 }
 
 func (login_info *LoginInfo) MakeUser(msg map[string]string) int {
-	uid := time.Now().Unix() - dur_time
-	uid_str := strconv.FormatInt(uid, 16)
+	uid := time.Now().UnixNano() - dur_time
+	uid_str := strconv.FormatInt(uid, 36)
 
 	msg["uid"] = uid_str
 	msg["third_openid"] = msg["device_id"]
@@ -94,7 +93,7 @@ func Login(msg map[string]string, json_data *[]byte) {
 	login_info.DeviceID = msg["device_id"]
 	login_info.ThirdOpenid = msg["device_id"]
 	login_info.ExpireTime = util.TOKEN_DATA.ExpireTime
-	login_info.AccessToken = base64.URLEncoding.EncodeToString(util.GenerateToken(login_info.Uid))
+	login_info.AccessToken = util.GenerateToken(login_info.Uid)
 	*json_data, _ = json.Marshal(LoginRet{util.GetResult(util.ERRCODE.OK), login_info})
 }
 
