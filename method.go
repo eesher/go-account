@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var dur_time int64 = time.Date(2016, time.January, 0, 0, 0, 0, 0, time.UTC).UnixNano()
+var dur_time = time.Date(2016, time.January, 0, 0, 0, 0, 0, time.UTC).UnixNano()
 
 type LoginRet struct {
 	util.Result

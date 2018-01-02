@@ -2,6 +2,7 @@ package util
 
 import (
 	"log"
+	"runtime"
 )
 
 type Result struct {
@@ -55,7 +56,8 @@ func GetResult(errcode int) Result {
 
 func CheckErr(err error) bool {
 	if err != nil {
-		log.Println(err)
+		_, fn, line, _ := runtime.Caller(1)
+		log.Printf("[error] [%s:%d] %v", fn, line, err)
 		return false
 	}
 	return true

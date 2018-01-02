@@ -2,7 +2,6 @@ package main
 
 import (
 	"go-account/util"
-	"log"
 	"net/http"
 )
 
@@ -20,5 +19,5 @@ func main() {
 	http.HandleFunc("/login", Handler(Login))
 	http.HandleFunc("/auth", Handler(Auth))
 
-	log.Fatal(http.ListenAndServe(config.Server.Listen, nil))
+	util.CheckErr(http.ListenAndServe(config.Server.Listen, nil))
 }

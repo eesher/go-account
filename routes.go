@@ -89,12 +89,12 @@ func Handler(pass Method) handler {
 				}
 			}
 			*/
-		} /* else if r.Header.Get("Content-Type") == "application/x-www-form-urlencoded" {
+		} else if r.Header.Get("Content-Type") == "application/x-www-form-urlencoded" {
 			r.ParseForm()
 			for param := range r.Form {
-				msg[param] = r.Form.Get(param)
+				data[param] = r.Form.Get(param)
 			}
-		}*/
+		}
 
 		pass(data, &json_data)
 		io.WriteString(w, string(json_data))
