@@ -13,7 +13,7 @@ func main() {
 	}
 	util.MysqlInit(config.Db)
 	util.TokenInit(config.Token)
-	util.ErrcodeInit()
+	//util.ErrcodeInit()
 	//RoutesInit()
 
 	http.HandleFunc("/login", Handler(Login))

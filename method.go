@@ -43,7 +43,7 @@ type AuthRet struct {
 	UserInfo
 }
 
-func (login_info *LoginInfo) MakeUser(msg map[string]string) int {
+func (login_info *LoginInfo) MakeUser(msg map[string]string) (errcode int) {
 	uid := time.Now().UnixNano() - dur_time
 	uid_str := strconv.FormatInt(uid, 36)
 
@@ -52,7 +52,7 @@ func (login_info *LoginInfo) MakeUser(msg map[string]string) int {
 	msg["name"] = "default name"
 
 	//var json_data []byte
-	errcode := 0
+	//errcode := 0
 	if errcode = util.NewUserMap(msg); errcode != util.ERRCODE.OK {
 		return errcode
 	}
@@ -64,8 +64,8 @@ func (login_info *LoginInfo) MakeUser(msg map[string]string) int {
 	return errcode
 }
 
-func (login_info *LoginInfo) GuestLogin(msg map[string]string) int {
-	var errcode int
+func (login_info *LoginInfo) GuestLogin(msg map[string]string) (errcode int) {
+	//var errcode int
 	login_info.Uid, errcode = util.GetUid("guest", msg["device_id"])
 	if errcode != util.ERRCODE.OK {
 		return errcode

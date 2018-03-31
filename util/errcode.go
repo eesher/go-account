@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"log"
 	"runtime"
 )
@@ -23,7 +24,8 @@ type Errcode struct {
 var error_info = map[int]string{}
 var ERRCODE = Errcode{}
 
-func ErrcodeInit() {
+func init() {
+	fmt.Println("errcode init")
 	ERRCODE.OK = 0
 	error_info[ERRCODE.OK] = "ok"
 
